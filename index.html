@@ -6,362 +6,251 @@
 <title>Entraînement FASS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: a single dark console page — hero, "à savoir", session launcher, theme tiles,
-   collapsible question index and a source bibliography, stacked top to bottom; a
-   fullscreen quiz/results view swaps in over it. Deliberately dark-only, mirrors the
-   reference FASP trainer's black chassis / orange mark / light CTA button. */
+/* Layout concept: same black equipment-panel look as the FASP trainer — orange as the only
+   loud colour, a weighted exam-blueprint bar, and a numbered index grid as signature elements. */
 :root{
-  --bg:#0c0b09;
-  --bg-raised:#121009;
-  --panel:#18150e;
-  --panel-2:#211d13;
-  --line:#332c1d;
-  --line-soft:#241f14;
-  --ink:#f5f1e4;
-  --ink-dim:#a89d82;
-  --ink-faint:#766c57;
-  --accent:#ff5a1f;
-  --accent-2:#ffb020;
-  --light-bg:#f5f1e4;
-  --light-ink:#15130c;
-  --good:#52d17f;
-  --good-bg:rgba(82,209,127,.12);
-  --bad:#ff6b55;
-  --bad-bg:rgba(255,107,85,.12);
-  --cat-hardware:#ffb020;
-  --cat-performance:#38d9d9;
-  --cat-software:#c09bff;
-  --cat-networking:#6fa8ff;
-  --cat-replication:#52d17f;
-  --shadow:0 1px 0 rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.5);
-  color-scheme: dark;
+  --bg:#0a0a0a; --surface:#141414; --surface2:#1c1c1c; --ink:#f3f1ee; --muted:#a6a39e; --line:#2f2d2b;
+  --accent:#ff5a1f; --accent-ink:#0a0a0a; --ok:#5bd68a; --okbg:#10281a; --bad:#ff7a70; --badbg:#321512; --warn:#ffb340; --warnbg:#2a1d08;
+  --d1:#6ea8ff; --d2:#b48cff; --d3:#ffb340; --d4:#3dd6b0; --d5:#f4709b;
+  --f-sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-cond:'IBM Plex Sans Condensed','IBM Plex Sans',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --on-ok:#0a0a0a; --on-bad:#0a0a0a;
+  color-scheme:dark;
+}
+:root[data-theme=light]{
+  --bg:#f6f4f1; --surface:#ffffff; --surface2:#efece8; --ink:#1b1917; --muted:#5d5954; --line:#d8d3cc;
+  --accent:#d13d08; --accent-ink:#ffffff; --ok:#17803f; --okbg:#e2f4e9; --bad:#c0322a; --badbg:#fbe5e2; --warn:#9a5b00; --warnbg:#fff0d4;
+  --on-ok:#ffffff; --on-bad:#ffffff;
+  color-scheme:light;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family:'IBM Plex Sans',system-ui,sans-serif;
-  padding-left:max(16px, env(safe-area-inset-left,0px));
-  padding-right:max(16px, env(safe-area-inset-right,0px));
-  background-image:
-    radial-gradient(640px 320px at 85% -6%, rgba(255,90,31,.14), transparent 60%),
-    radial-gradient(480px 260px at 8% 0%, rgba(255,176,32,.08), transparent 60%);
-  background-repeat:no-repeat;
-}
-h1,h2,h3{font-family:'Libre Franklin',system-ui,sans-serif;letter-spacing:-0.01em;text-wrap:balance;margin:0}
-code,.mono{font-family:'IBM Plex Mono',monospace}
-a{color:var(--accent-2)}
-.shell{max-width:760px;margin:0 auto;padding-block:0 56px}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--f-sans);margin:0;
+  padding-inline:max(16px, env(safe-area-inset-left,0px)) max(16px, env(safe-area-inset-right,0px));
+  padding-block:20px 48px}
+.wrap{max-width:980px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-cond);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(1.9rem,5vw,2.8rem);letter-spacing:-.01em}
+h2{font-size:1.45rem}
+h3{font-size:1.1rem}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.88em}
+.muted{color:var(--muted)}
 [hidden]{display:none!important}
-
-/* ---- Header ---- */
-header.top{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding-block:18px;
-  position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
-  background:color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter:blur(8px);
-  border-bottom:1px solid var(--line-soft);
-}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:19;background:var(--bg)}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{
-  width:34px;height:34px;border-radius:9px;flex:none;
-  background:linear-gradient(145deg, var(--accent-2), var(--accent));
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Libre Franklin',sans-serif;font-weight:900;font-size:14px;color:#1b0d00;
-  box-shadow:0 2px 10px rgba(255,90,31,.35);
-}
-.brand .word{font-weight:700;font-size:17px;white-space:nowrap}
-.top .tag{font-size:11.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;white-space:nowrap}
-
-/* ---- Hero ---- */
-.hero{padding-block:40px 8px}
-.hero h1{font-size:30px;font-weight:800;line-height:1.15;max-width:22ch}
-.hero .lede{color:var(--ink-dim);font-size:15px;line-height:1.6;margin-top:14px;max-width:58ch}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:26px}
-@media (max-width:560px){.stats{grid-template-columns:repeat(3,1fr)}}
-.stat{background:var(--bg-raised);padding:14px 10px;text-align:center}
-.stat .pct{font-family:'Libre Franklin',sans-serif;font-weight:800;font-size:21px}
-.stat .lab{font-size:10.5px;color:var(--ink-faint);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
-.stat .swatch{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle}
-
-.btn{
-  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13.5px;
-  border:none;border-radius:10px;padding:13px 20px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;justify-content:center;
-}
-.btn-light{background:var(--light-bg);color:var(--light-ink)}
-.btn-accent{background:var(--accent);color:#1b0d00;font-weight:700}
-.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.btn.block{width:100%}
-.btn[disabled]{opacity:.4;cursor:not-allowed}
-.hero .cta{margin-top:24px}
-
-/* ---- Section shell ---- */
-section.block{padding-block:34px}
-section.block + section.block{border-top:1px solid var(--line-soft)}
-.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-2);font-weight:600}
-.block h2{font-size:21px;margin-top:6px}
-.block .sub{color:var(--ink-dim);font-size:13.5px;margin-top:6px;line-height:1.55}
-
-/* ---- À savoir ---- */
-.callout{
-  background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent-2);
-  border-radius:10px;padding:16px 18px;font-size:13.5px;line-height:1.65;color:var(--ink-dim);
-}
-.callout b{color:var(--ink)}
-
-/* ---- Setup / lancer une session ---- */
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
-.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-@media (max-width:460px){.cats{grid-template-columns:1fr}}
-.cat-chip{
-  display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;cursor:pointer;background:var(--panel-2);user-select:none;min-width:0;
-}
-.cat-chip input{accent-color:var(--accent);flex:none}
-.cat-chip .swatch{width:9px;height:9px;border-radius:3px;flex:none}
-.cat-chip .name{font-weight:600;font-size:13.5px;flex:1;min-width:0}
-.cat-chip .count{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);flex:none}
-.cat-chip .mastery{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-dim);flex:none}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.seg button{border:none;background:var(--panel-2);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 14px;cursor:pointer;border-right:1px solid var(--line)}
-.seg button:last-child{border-right:none}
-.seg button.active{background:var(--accent);color:#1b0d00;font-weight:700}
-.field-label{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:600}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.switch{position:relative;width:38px;height:22px;flex:none}
-.switch input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0}
-.switch .track{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
-.switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:left .15s}
-.switch input:checked + .track{background:var(--accent)}
-.switch input:checked ~ .knob{left:18px}
-.hint{font-size:12px;color:var(--ink-faint)}
-
-/* ---- Thème tiles ---- */
-.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-@media (max-width:560px){.theme-grid{grid-template-columns:1fr}}
-.theme-tile{
-  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;
-  display:flex;flex-direction:column;gap:10px;
-}
-.theme-tile .top-row{display:flex;align-items:center;gap:9px}
-.theme-tile .swatch{width:10px;height:10px;border-radius:3px;flex:none}
-.theme-tile .name{font-weight:700;font-size:14px;flex:1}
-.theme-tile .count{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint)}
-.theme-tile .bar{height:5px;border-radius:999px;background:var(--panel-2);overflow:hidden}
-.theme-tile .bar > i{display:block;height:100%;border-radius:999px}
-.theme-tile .foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.theme-tile .pct{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-dim)}
-.theme-tile .btn{padding:8px 13px;font-size:12px}
-
-/* ---- Sommaire des questions ---- */
-.index-tools{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-.chip-filter{
-  font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:7px 11px;border-radius:999px;
-  border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);cursor:pointer;
-}
-.chip-filter.active{background:var(--accent);border-color:var(--accent);color:#1b0d00;font-weight:700}
-.index-search{
-  width:100%;margin-top:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;color:var(--ink);font:inherit;font-size:13.5px;
-}
-.index-list{margin-top:14px;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:10px}
-.index-row{
-  display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-bottom:1px solid var(--line-soft);
-  border-left:3px solid transparent;font-size:13px;line-height:1.5;
-}
-.index-row:last-child{border-bottom:none}
-.index-row .num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:11.5px;flex:none;width:28px;padding-top:1px}
-.index-row .qt{color:var(--ink-dim)}
-.index-empty{padding:24px;text-align:center;color:var(--ink-faint);font-size:13px}
-.index-count{font-size:12px;color:var(--ink-faint);margin-top:8px}
-
-/* ---- Documents sources ---- */
-.docs-grid{columns:2;column-gap:28px;margin-top:14px}
-@media (max-width:560px){.docs-grid{columns:1}}
-.docs-grid .doc{font-size:13px;color:var(--ink-dim);padding:7px 0;break-inside:avoid;border-bottom:1px dashed var(--line-soft)}
-.docs-grid .doc b{color:var(--ink);font-weight:600}
-.doc-note{margin-top:16px;font-size:12.5px;color:var(--ink-faint);line-height:1.6}
-
-footer.page{text-align:center;color:var(--ink-faint);font-size:11.5px;padding-top:30px}
-
-/* ---- Quiz / results overlay ---- */
-.qmeta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint)}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-weight:600}
-.pill .swatch{width:7px;height:7px;border-radius:50%}
-.bar-top{height:5px;border-radius:999px;background:var(--panel-2);overflow:hidden;margin-top:10px}
-.bar-top > i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .25s}
-.qtext{font-size:18.5px;font-weight:600;line-height:1.4;margin-top:16px;text-wrap:balance}
-.opts{display:flex;flex-direction:column;gap:9px;margin-top:16px}
-.opt{
-  display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
-  border:1px solid var(--line);border-radius:10px;background:var(--panel-2);
-  padding:12px 13px;cursor:pointer;font:inherit;color:var(--ink);font-size:14px;line-height:1.45;
-}
-.opt .letter{
-  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;width:22px;height:22px;border-radius:6px;
-  background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;
-}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:22px}
+.brand{display:flex;gap:10px;align-items:center;font-family:var(--f-cond);font-weight:600;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
+.mark{width:30px;height:30px;border-radius:7px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-mono);font-weight:500;font-size:.8rem;letter-spacing:0}
+h1 em{font-style:normal;color:var(--accent)}
+.sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:12px}
+.sq{font-family:var(--f-mono);font-size:.82rem;background:var(--surface2);border:1px solid var(--line);border-bottom:4px solid var(--line);border-radius:6px;padding:7px 0 5px;min-height:38px;text-align:center;color:var(--ink);cursor:pointer}
+.sq:hover{border-color:var(--accent)}
+.sq.b1{border-bottom-color:var(--d1)}.sq.b2{border-bottom-color:var(--d2)}.sq.b3{border-bottom-color:var(--d3)}.sq.b4{border-bottom-color:var(--d4)}.sq.b5{border-bottom-color:var(--d5)}
+.sq.ok{color:var(--ok);background:var(--okbg)}.sq.ko{color:var(--bad);background:var(--badbg)}
+.sq.cur{outline:2px solid var(--accent);outline-offset:1px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:9px 14px;font-weight:500;min-height:42px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px}
+.lead{max-width:62ch;color:var(--muted);margin-top:14px}
+.note{background:var(--warnbg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:.92rem;max-width:80ch}
+.note b{color:var(--warn)}
+.srcs .sgrp{margin-top:18px}
+.srcs h3{font-size:1.1rem;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.srcs ul{list-style:none;margin:0;padding:0}
+.srcs li{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)}
+.srcs li .muted{font-size:.82rem;text-align:right;flex:0 1 55%}
+@media (max-width:560px){.srcs li{flex-direction:column;gap:2px}.srcs li .muted{text-align:left;flex:none}}
+.bp{display:flex;height:44px;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:22px 0 6px}
+.bp div{display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:.82rem;font-weight:500;color:#0a0a0a;min-width:0;padding-inline:4px;white-space:nowrap;overflow:hidden}
+.bp .c1{background:var(--d1)}.bp .c2{background:var(--d2)}.bp .c3{background:var(--d3)}.bp .c4{background:var(--d4)}.bp .c5{background:var(--d5)}
+.bpl{font-size:.82rem;color:var(--muted);margin-bottom:26px}
+.panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;align-items:start;margin-top:16px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field label,.field .lbl{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+select{background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:42px;width:100%}
+.chk{display:flex;gap:8px;align-items:center;min-height:42px}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.themebox{display:flex;flex-direction:column;gap:7px}
+.themebox label{display:flex;align-items:center;gap:8px;font-size:.88rem;padding:4px 0}
+.themebox input{width:16px;height:16px;accent-color:var(--accent);flex:none}
+.themebox .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:.92rem;color:var(--muted)}
+.stats b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
+.doms{display:grid;gap:16px;margin-top:22px}
+.dom{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.dom>header{display:flex;gap:14px;align-items:baseline;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface2)}
+.dom .pct{font-family:var(--f-mono);font-size:1.7rem;font-weight:500;line-height:1}
+.dom .tt{display:flex;gap:12px;align-items:baseline;min-width:0}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none}
+.d1{background:var(--d1)}.d2{background:var(--d2)}.d3{background:var(--d3)}.d4{background:var(--d4)}.d5{background:var(--d5)}
+.dom .cours{padding:12px 18px 0;font-size:.9rem;color:var(--muted)}
+.dom .domfoot{padding:12px 18px 16px}
+.qhead{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+.chip{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 12px 3px 8px;font-size:.84rem}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:18px}
+.prog>i{display:block;height:100%;background:var(--accent)}
+.stem{font-size:1.12rem;font-weight:500;white-space:pre-wrap;margin-bottom:14px}
+.opts{display:grid;gap:10px;margin:0;padding:0;border:0}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;text-align:left;width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:12px 14px}
 .opt:hover:not([disabled]){border-color:var(--accent)}
+.opt .ltr{font-family:var(--f-mono);font-weight:500;width:26px;height:26px;border-radius:5px;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--line);font-size:.9rem}
+.opt.good{border-color:var(--ok);background:var(--okbg)}
+.opt.good .ltr{background:var(--ok);color:var(--on-ok);border-color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--badbg)}
+.opt.wrong .ltr{background:var(--bad);color:var(--on-bad);border-color:var(--bad)}
 .opt[disabled]{cursor:default}
-.opt.correct{background:var(--good-bg);border-color:var(--good)}
-.opt.correct .letter{background:var(--good);border-color:var(--good);color:#06240f}
-.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
-.opt.wrong .letter{background:var(--bad);border-color:var(--bad);color:#2b0300}
-.feedback{margin-top:4px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
-.feedback.good{color:var(--good)}
-.feedback.bad{color:var(--bad)}
-.qnav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
-.score-big{font-family:'Libre Franklin',sans-serif;font-weight:800;font-size:56px;line-height:1}
-.score-sub{color:var(--ink-dim);font-size:13.5px;margin-top:4px}
-.breakdown{display:flex;flex-direction:column;gap:10px;margin-top:18px}
-.bd-row{display:grid;grid-template-columns:120px 1fr 48px;gap:10px;align-items:center;font-size:13px}
-.bd-row .lab{display:flex;align-items:center;gap:7px;font-weight:600}
-.bd-row .swatch{width:8px;height:8px;border-radius:50%;flex:none}
-.bd-bar{height:8px;border-radius:999px;background:var(--panel-2);overflow:hidden}
-.bd-bar > i{display:block;height:100%;border-radius:999px}
-.bd-row .pct{font-family:'IBM Plex Mono',monospace;text-align:right;color:var(--ink-faint)}
-.missed{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
-.missed-item{padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
-.missed-item:last-child{border-bottom:none}
-.missed-item .mq{font-weight:600;margin-bottom:6px;line-height:1.4}
-.missed-item .ma{color:var(--ink-faint);font-size:12.5px;line-height:1.5}
-.missed-item .ma b{color:var(--good);font-weight:600}
-details > summary{cursor:pointer;font-weight:600;font-size:13.5px;list-style:none}
-details > summary::-webkit-details-marker{display:none}
-details > summary::before{content:"▸ ";color:var(--accent)}
-details[open] > summary::before{content:"▾ "}
+.opt .tag{display:block;font-size:.8rem;font-weight:600;margin-top:2px}
+.opt.good .tag{color:var(--ok)}.opt.wrong .tag{color:var(--bad)}
+.fb{margin-top:18px;display:grid;gap:14px}
+.verdict{padding:10px 14px;border-radius:6px;font-weight:600}
+.verdict.ok{background:var(--okbg);color:var(--ok)}
+.verdict.ko{background:var(--badbg);color:var(--bad)}
+.nav{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:20px}
+.score{font-family:var(--f-mono);font-size:clamp(2.2rem,8vw,3.6rem);font-weight:500;line-height:1}
+.bars{display:grid;gap:10px;margin-top:14px}
+.bar{display:grid;grid-template-columns:minmax(120px,200px) 1fr auto;gap:12px;align-items:center;font-size:.92rem}
+.bar .tr{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar .tr i{display:block;height:100%}
+@media (max-width:520px){.bar{grid-template-columns:1fr auto}.bar .tr{grid-column:1/-1;order:3}}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:.88rem}
+.fchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+input[type=search]{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-height:44px}
+details.it{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-top:10px}
+details.it>summary{cursor:pointer;padding:12px 14px;list-style:none;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
+details.it>summary::-webkit-details-marker{display:none}
+details.it>summary .n{font-family:var(--f-mono);color:var(--muted)}
+details.it .body{padding:0 14px 14px;display:grid;gap:8px}
+.lopt{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:6px 10px;border-radius:6px;font-size:.9rem}
+.lopt.good{background:var(--okbg);color:var(--ink);outline:1px solid var(--ok)}
+.lopt b{font-family:var(--f-mono)}
+.foot{margin-top:40px;font-size:.84rem;color:var(--muted);max-width:80ch}
+section.block{margin-top:34px}
+@media (prefers-reduced-motion:no-preference){.prog>i{transition:width .25s ease}}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <span class="logo">FA</span>
-    <span class="word">Entraînement FASS</span>
+<div class="wrap" id="app">
+
+  <div class="top">
+    <div class="brand"><span class="mark">FA</span> Entraînement FASS</div>
+    <button class="btn" id="themeToggle">Fond clair</button>
   </div>
-  <span class="tag">Pure Storage · Support Terrain</span>
-</header>
 
-<div class="shell">
-
-  <!-- ===== HOME (hidden while a quiz is running) ===== -->
+  <!-- ===== HOME ===== -->
   <div id="home">
+    <h1>Préparation à la certification<br><em>FlashArray Support Specialist</em></h1>
+    <p class="lead" id="leadText"></p>
 
-    <section class="hero">
-      <h1>Préparation à la certification FlashArray Support Specialist</h1>
-      <p class="lede" id="ledeText">171 questions d'entraînement, classées selon les cinq domaines de l'examen. Issues des questions officielles, d'une banque auditée et d'un retour de cours terrain, dédupliquées et mélangées entre Matériel, Performance, Logiciel, Réseau et Réplication.</p>
+    <div class="bp" id="bpBar"></div>
+    <div class="bpl" id="bpLegend"></div>
 
-      <div class="stats" id="statsRow"></div>
-
-      <div class="cta">
-        <button class="btn btn-light" id="heroStartBtn">Lancer une session →</button>
-      </div>
-    </section>
-
-    <section class="block">
-      <div class="eyebrow">À savoir</div>
-      <div class="callout" style="margin-top:10px">
-        Ces questions sont un <b>outil de révision personnel</b>, pas un extrait de l'examen réel : elles viennent d'un mélange de questions d'exemple officielles Pure Storage, d'une banque d'entraînement relue et vérifiée, et de retours de cours et de collègues. Les thèmes couvrent les cinq domaines du programme FASS, mais ne garantissent ni la couverture exacte ni la difficulté de l'examen officiel. Les questions et réponses restent volontairement <b>en anglais</b>, comme sur l'examen ; seule l'interface est en français. La progression (pourcentages par thème) est enregistrée uniquement dans ce navigateur, sur cet appareil.
-      </div>
-    </section>
+    <div class="note"><b>À savoir.</b> Ce site est un outil d'entraînement personnel, non officiel. Les questions viennent d'un mélange de questions d'exemple officielles Pure Storage, d'une banque relue et partiellement vérifiée, et de retours de cours et de collègues — elles ne garantissent ni la couverture ni la difficulté exacte de l'examen réel, et leurs sources n'ont pas toutes été vérifiées individuellement. Les questions et réponses restent en anglais, comme à l'examen ; seule l'interface est en français.</div>
 
     <section class="block" id="setup-session">
-      <div class="eyebrow">Lancer une session</div>
-      <h2>Configure ton entraînement</h2>
+      <h2>Lancer une session</h2>
       <div class="card" style="margin-top:14px">
-        <div class="field-label">Thèmes</div>
-        <div class="cats" id="cats"></div>
-
-        <div class="row" style="margin-top:18px;justify-content:space-between">
-          <div>
-            <div class="field-label">Nombre de questions</div>
-            <div class="seg" id="countSeg" style="margin-top:6px"></div>
+        <div class="panel">
+          <div class="field">
+            <span class="lbl">Thèmes</span>
+            <div class="themebox" id="cats"></div>
           </div>
-          <div style="flex:1;min-width:160px">
-            <div class="toggle-row">
-              <div>
-                <div class="field-label">Mélanger les réponses</div>
-                <div class="hint">Ordre des options aléatoire</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="shuffleOpts" checked>
-                <span class="track"></span><span class="knob"></span>
-              </label>
-            </div>
+          <div class="field">
+            <label class="lbl" for="countSel">Nombre</label>
+            <select id="countSel">
+              <option value="20">20 questions</option>
+              <option value="40" selected>40 questions</option>
+              <option value="80">80 questions</option>
+              <option value="all">Toutes</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="lbl">Options</span>
+            <label class="chk"><input type="checkbox" id="shuffleOpts" checked> Mélanger les réponses</label>
           </div>
         </div>
-
-        <button class="btn btn-accent block" id="startBtn" style="margin-top:20px">Démarrer →</button>
-        <div class="hint" id="poolHint" style="margin-top:10px;text-align:center"></div>
+        <div class="stats" id="poolStats"></div>
+        <div class="row" style="margin-top:16px">
+          <button class="btn primary" id="startBtn">Démarrer →</button>
+        </div>
       </div>
     </section>
 
     <section class="block">
-      <div class="eyebrow">Entraînements par thème</div>
-      <h2>Réviser un domaine en particulier</h2>
-      <p class="sub">Démarre directement une session sur un seul thème, avec toutes ses questions.</p>
-      <div class="theme-grid" id="themeGrid"></div>
+      <h2>Entraînements par thème</h2>
+      <p class="lead" style="margin-top:8px">Démarre directement une session sur un seul domaine, avec toutes ses questions.</p>
+      <div class="doms" id="domsList"></div>
     </section>
 
     <section class="block">
-      <div class="eyebrow">Sommaire des questions</div>
-      <h2>Parcourir la banque de questions</h2>
-      <p class="sub">Aperçu des 171 questions (énoncé en anglais) sans lancer de session — pratique pour repérer les thèmes à revoir.</p>
-      <div class="index-tools" id="indexFilters"></div>
-      <input type="text" class="index-search" id="indexSearch" placeholder="Rechercher dans les questions…">
-      <div class="index-list" id="indexList"></div>
-      <div class="index-count" id="indexCount"></div>
+      <h2>Sommaire des questions</h2>
+      <p class="lead" style="margin-top:8px">Les 171 questions, consultables sans lancer de session — déplie une ligne pour voir les options et la bonne réponse.</p>
+      <div class="filters" id="indexFilters"></div>
+      <input type="search" id="indexSearch" placeholder="Rechercher dans les questions…">
+      <div id="indexList"></div>
+      <p class="muted mono" id="indexCount" style="margin-top:10px;font-size:.82rem"></p>
     </section>
 
-    <section class="block">
-      <div class="eyebrow">Documents sources</div>
-      <h2>Références utilisées</h2>
-      <p class="sub">Documentation Pure Storage / Everpure consultée pour auditer la banque de 110 questions de base, et les trois autres jeux assemblés pour la compléter.</p>
-      <div class="docs-grid" id="docsGrid"></div>
-      <div class="doc-note">+ Jeu de questions d'exemple officielles Pure Storage (FASS) · retours d'expérience d'un collègue certifié · support de cours FASS en ligne.</div>
+    <section class="block srcs">
+      <h2>Documents sources</h2>
+      <p class="lead" style="margin-top:8px">Documentation Pure Storage / Everpure consultée pour auditer la banque de 110 questions de base.</p>
+      <div class="sgrp">
+        <h3>Guides &amp; références officielles</h3>
+        <ul id="docsList"></ul>
+      </div>
+      <p class="muted" style="margin-top:16px;font-size:.84rem">+ questions d'exemple officielles Pure Storage (FASS) · retours d'expérience d'un collègue certifié · support de cours FASS en ligne.</p>
     </section>
 
-    <footer class="page">Outil d'entraînement personnel · progression enregistrée uniquement sur cet appareil</footer>
+    <p class="foot">Outil d'entraînement personnel · progression enregistrée uniquement sur cet appareil.</p>
   </div>
 
-  <!-- ===== QUIZ VIEW ===== -->
-  <div class="card" id="quiz" hidden style="margin-top:24px">
-    <div class="qmeta">
-      <span id="qCounter">Q 1 / 40</span>
-      <span class="pill"><span class="swatch" id="qCatSwatch"></span><span id="qCatName">Hardware</span></span>
+  <!-- ===== QUIZ ===== -->
+  <div id="quiz" hidden>
+    <div class="qhead">
+      <span class="chip"><span class="dot" id="qDot"></span><span id="qCatName">Matériel</span></span>
+      <span class="mono muted" id="qCounter">Q 1 / 40</span>
+      <button class="btn ghost" id="quitBtn">Quitter</button>
     </div>
-    <div class="bar-top"><i id="qBar" style="width:2.5%"></i></div>
-    <div class="qtext" id="qText"></div>
-    <div class="opts" id="qOpts"></div>
-    <div class="feedback" id="qFeedback" hidden></div>
-    <div class="qnav">
-      <button class="btn btn-ghost" id="quitBtn">Quitter la session</button>
-      <button class="btn btn-accent" id="nextBtn" disabled>Suivant →</button>
+    <div class="prog"><i id="qBar" style="width:2.5%"></i></div>
+    <div class="sum" id="navGrid" style="margin-bottom:18px"></div>
+    <div class="card">
+      <div class="stem" id="qText"></div>
+      <div class="opts" id="qOpts"></div>
+      <div class="fb" id="qFb" hidden>
+        <div class="verdict" id="qVerdict"></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn" id="prevBtn">← Précédent</button>
+      <button class="btn primary" id="nextBtn" disabled>Suivant →</button>
     </div>
   </div>
 
-  <!-- ===== RESULTS VIEW ===== -->
-  <div class="card" id="results" hidden style="margin-top:24px">
-    <div class="field-label">Session terminée</div>
-    <div class="score-big" id="scoreBig">0%</div>
-    <div class="score-sub" id="scoreSub"></div>
-    <div class="breakdown" id="breakdown"></div>
+  <!-- ===== RESULTS ===== -->
+  <div id="results" hidden>
+    <h2>Session terminée</h2>
+    <div class="score" id="scoreBig">0%</div>
+    <p class="muted" id="scoreSub"></p>
+    <div class="bars" id="bars"></div>
     <div class="row" style="margin-top:22px">
-      <button class="btn btn-accent" id="retryMissedBtn">Refaire les erreurs</button>
-      <button class="btn btn-ghost" id="restartBtn">Nouvelle session</button>
+      <button class="btn primary" id="retryMissedBtn">Refaire les erreurs</button>
+      <button class="btn ghost" id="restartBtn">Nouvelle session</button>
     </div>
-    <div class="missed" id="missedWrap" hidden>
-      <details>
-        <summary id="missedSummary">Revoir les questions manquées</summary>
-        <div id="missedList"></div>
-      </details>
+    <div id="missedWrap" style="margin-top:22px" hidden>
+      <h3>Questions manquées</h3>
+      <div id="missedList"></div>
     </div>
   </div>
 
@@ -372,14 +261,13 @@ details[open] > summary::before{content:"▾ "}
   "use strict";
 
   var CATS = [
-    {key:"hardware",    label:"Matériel",   color:"var(--cat-hardware)"},
-    {key:"performance", label:"Performance", color:"var(--cat-performance)"},
-    {key:"software",    label:"Logiciel",    color:"var(--cat-software)"},
-    {key:"networking",  label:"Réseau",      color:"var(--cat-networking)"},
-    {key:"replication", label:"Réplication", color:"var(--cat-replication)"}
+    {key:"networking",  label:"Réseau",      cls:"1"},
+    {key:"software",    label:"Logiciel",    cls:"2"},
+    {key:"hardware",    label:"Matériel",    cls:"3"},
+    {key:"performance", label:"Performance", cls:"4"},
+    {key:"replication", label:"Réplication", cls:"5"}
   ];
-  var catColor = {}; CATS.forEach(function(c){ catColor[c.key] = c.color; });
-  var catLabel = {}; CATS.forEach(function(c){ catLabel[c.key] = c.label; });
+  var catByKey = {}; CATS.forEach(function(c){ catByKey[c.key] = c; });
 
   var DOCS = [
     "Purity//FA Admin Guide", "Purity//FA General Administration", "Guide CLI Purity//FA",
@@ -395,12 +283,29 @@ details[open] > summary::before{content:"▾ "}
   ];
 
   var LS_KEY = "fass_training_mastery_v1";
-  function loadMastery(){
-    try{ var raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : {}; }
-    catch(e){ return {}; }
-  }
+  var THEME_KEY = "fass_training_theme_v1";
+  function loadMastery(){ try{ var r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : {}; }catch(e){ return {}; } }
   function saveMastery(m){ try{ localStorage.setItem(LS_KEY, JSON.stringify(m)); }catch(e){} }
   var mastery = loadMastery();
+
+  function el(id){ return document.getElementById(id); }
+
+  function applyTheme(t){
+    if (t === "light") document.documentElement.setAttribute("data-theme","light");
+    else document.documentElement.removeAttribute("data-theme");
+    el("themeToggle").textContent = t === "light" ? "Fond sombre" : "Fond clair";
+  }
+  (function initTheme(){
+    var t = "dark";
+    try{ t = localStorage.getItem(THEME_KEY) || "dark"; }catch(e){}
+    applyTheme(t);
+  })();
+  el("themeToggle").addEventListener("click", function(){
+    var cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    var next = cur === "light" ? "dark" : "light";
+    applyTheme(next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  });
 
   var ALL = [];
   var activeCats = {};
@@ -409,17 +314,6 @@ details[open] > summary::before{content:"▾ "}
   var session = null;
   var indexFilter = "all";
   var indexQuery = "";
-
-  function el(id){ return document.getElementById(id); }
-  function pctOf(cat){
-    var m = mastery[cat];
-    return (m && m.total) ? Math.round(100 * m.correct / m.total) : null;
-  }
-  function overallPct(){
-    var c = 0, t = 0;
-    CATS.forEach(function(cc){ var m = mastery[cc.key]; if (m){ c += m.correct; t += m.total; } });
-    return t ? Math.round(100 * c / t) : null;
-  }
 
   function shuffle(arr){
     var a = arr.slice();
@@ -430,21 +324,40 @@ details[open] > summary::before{content:"▾ "}
     return a;
   }
 
-  function renderStats(){
-    var wrap = el("statsRow");
-    wrap.innerHTML = "";
-    var overall = overallPct();
-    var tiles = [{label:"Score global", color:"var(--accent-2)", pct: overall}].concat(
-      CATS.map(function(c){ return {label:c.label, color:c.color, pct: pctOf(c.key)}; })
-    );
-    tiles.forEach(function(t){
-      var d = document.createElement("div");
-      d.className = "stat";
-      d.innerHTML =
-        '<div class="pct">' + (t.pct === null ? "—" : t.pct + "%") + '</div>' +
-        '<div class="lab"><span class="swatch" style="background:' + t.color + '"></span>' + t.label + '</div>';
-      wrap.appendChild(d);
+  function pctOf(cat){
+    var m = mastery[cat];
+    return (m && m.total) ? Math.round(100 * m.correct / m.total) : null;
+  }
+
+  // largest-remainder rounding so the blueprint bar always sums to 100
+  function weightedPercents(){
+    var total = ALL.length;
+    var raw = CATS.map(function(c){
+      var n = ALL.filter(function(q){ return q.c === c.key; }).length;
+      return { key:c.key, n:n, exact: total ? 100*n/total : 0 };
     });
+    var floors = raw.map(function(r){ return Math.floor(r.exact); });
+    var used = floors.reduce(function(a,b){ return a+b; }, 0);
+    var remainder = 100 - used;
+    var order = raw.map(function(r,i){ return {i:i, frac:r.exact-floors[i]}; }).sort(function(a,b){ return b.frac-a.frac; });
+    for (var k=0;k<remainder;k++){ floors[order[k].i]++; }
+    var out = {};
+    raw.forEach(function(r,i){ out[r.key] = { n:r.n, pct:floors[i] }; });
+    return out;
+  }
+
+  function renderBlueprint(){
+    var w = weightedPercents();
+    var bar = el("bpBar");
+    bar.innerHTML = "";
+    CATS.forEach(function(c){
+      var d = document.createElement("div");
+      d.className = "c" + c.cls;
+      d.style.flex = w[c.key].pct + " 0 0";
+      d.textContent = w[c.key].pct + " %";
+      bar.appendChild(d);
+    });
+    el("bpLegend").textContent = CATS.map(function(c){ return c.label + " " + w[c.key].pct + " %"; }).join(" · ");
   }
 
   function buildCatChips(){
@@ -452,256 +365,261 @@ details[open] > summary::before{content:"▾ "}
     wrap.innerHTML = "";
     CATS.forEach(function(c){
       var count = ALL.filter(function(q){ return q.c === c.key; }).length;
-      var p = pctOf(c.key);
       var label = document.createElement("label");
-      label.className = "cat-chip";
       label.innerHTML =
         '<input type="checkbox" data-cat="' + c.key + '" checked>' +
-        '<span class="swatch" style="background:' + c.color + '"></span>' +
-        '<span class="name">' + c.label + '</span>' +
-        '<span class="count mono">' + count + '</span>' +
-        '<span class="mastery">' + (p === null ? "—" : p + "% moy.") + '</span>';
+        '<span class="dot d' + c.cls + '"></span>' +
+        '<span>' + c.label + ' <span class="mono muted">(' + count + ')</span></span>';
       wrap.appendChild(label);
     });
     wrap.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
       cb.addEventListener("change", function(){
         activeCats[cb.getAttribute("data-cat")] = cb.checked;
-        updatePoolHint();
+        updatePoolStats();
       });
       activeCats[cb.getAttribute("data-cat")] = true;
     });
   }
 
-  function buildThemeTiles(){
-    var wrap = el("themeGrid");
+  function poolSize(){ return ALL.filter(function(q){ return activeCats[q.c]; }).length; }
+
+  function updatePoolStats(){
+    var n = poolSize();
+    var want = countChoice === "all" ? n : Math.min(countChoice, n);
+    el("poolStats").innerHTML = n === 0
+      ? '<span>Sélectionne au moins un thème.</span>'
+      : '<span><b>' + want + '</b> question' + (want===1?"":"s") + ' dans cette session</span><span><b>' + n + '</b> correspondent aux thèmes choisis</span><span><b>' + ALL.length + '</b> au total dans la banque</span>';
+    el("startBtn").disabled = n === 0;
+  }
+
+  function buildDoms(){
+    var wrap = el("domsList");
     wrap.innerHTML = "";
     CATS.forEach(function(c){
       var count = ALL.filter(function(q){ return q.c === c.key; }).length;
       var p = pctOf(c.key);
-      var tile = document.createElement("div");
-      tile.className = "theme-tile";
-      tile.innerHTML =
-        '<div class="top-row"><span class="swatch" style="background:' + c.color + '"></span><span class="name">' + c.label + '</span><span class="count mono">' + count + ' q.</span></div>' +
-        '<div class="bar"><i style="width:' + (p || 0) + '%;background:' + c.color + '"></i></div>' +
-        '<div class="foot"><span class="pct">' + (p === null ? "Pas encore pratiqué" : p + "% de réussite") + '</span><button class="btn btn-ghost" data-start="' + c.key + '">Démarrer</button></div>';
-      wrap.appendChild(tile);
+      var dom = document.createElement("div");
+      dom.className = "dom";
+      dom.innerHTML =
+        '<header><div class="tt"><span class="dot d' + c.cls + '"></span><h3>' + c.label + '</h3><span class="mono muted">' + count + ' questions</span></div>' +
+        '<div class="pct">' + (p === null ? "—" : p + "%") + '</div></header>' +
+        '<div class="domfoot"><button class="btn" data-start="' + c.key + '">Démarrer ce thème →</button></div>';
+      wrap.appendChild(dom);
     });
     wrap.querySelectorAll("[data-start]").forEach(function(b){
       b.addEventListener("click", function(){ startThemed(b.getAttribute("data-start")); });
     });
   }
 
-  var COUNT_OPTS = [20, 40, 80, "all"];
-  function buildCountSeg(){
-    var seg = el("countSeg");
-    seg.innerHTML = "";
-    COUNT_OPTS.forEach(function(opt, i){
-      var b = document.createElement("button");
-      b.textContent = opt === "all" ? "Toutes" : opt;
-      if (i === 1) b.classList.add("active");
-      b.addEventListener("click", function(){
-        seg.querySelectorAll("button").forEach(function(x){ x.classList.remove("active"); });
-        b.classList.add("active");
-        countChoice = opt;
-        updatePoolHint();
-      });
-      seg.appendChild(b);
-    });
-  }
-
-  function poolSize(){ return ALL.filter(function(q){ return activeCats[q.c]; }).length; }
-
-  function updatePoolHint(){
-    var n = poolSize();
-    var want = countChoice === "all" ? n : Math.min(countChoice, n);
-    el("poolHint").textContent = n === 0
-      ? "Sélectionne au moins un thème."
-      : want + " question" + (want === 1 ? "" : "s") + " dans cette session, sur " + n + " correspondant aux thèmes sélectionnés.";
-    el("startBtn").disabled = n === 0;
-  }
+  var COUNT_OPTS = [20,40,80,"all"];
+  el("countSel").addEventListener("change", function(e){
+    var v = e.target.value;
+    countChoice = v === "all" ? "all" : parseInt(v,10);
+    updatePoolStats();
+  });
 
   function startRun(){
     var pool = shuffle(ALL.filter(function(q){ return activeCats[q.c]; }));
     var n = countChoice === "all" ? pool.length : Math.min(countChoice, pool.length);
-    runSession(pool.slice(0, n).map(prepItem));
+    runSession(pool.slice(0,n).map(prepItem));
   }
-
   function startThemed(catKey){
     var pool = shuffle(ALL.filter(function(q){ return q.c === catKey; }));
     runSession(pool.map(prepItem));
   }
-
   function prepItem(q){
-    var order = q.o.map(function(_, i){ return i; });
+    var order = q.o.map(function(_,i){ return i; });
     if (shuffleOpts) order = shuffle(order);
     return {
-      id: q.id, qtext: q.q, cat: q.c,
+      id:q.id, qtext:q.q, cat:q.c,
       options: order.map(function(i){ return q.o[i]; }),
-      correct: order.indexOf(q.a)
+      correct: order.indexOf(q.a),
+      picked: null
     };
   }
 
   function runSession(items){
-    session = { items: items, idx: 0, correct: 0, missed: [] };
+    session = { items: items, idx: 0 };
     el("home").hidden = true;
     el("results").hidden = true;
     el("quiz").hidden = false;
     window.scrollTo(0,0);
+    renderNavGrid();
     showQuestion();
+  }
+
+  function renderNavGrid(){
+    var grid = el("navGrid");
+    grid.innerHTML = "";
+    session.items.forEach(function(it, i){
+      var c = catByKey[it.cat];
+      var sq = document.createElement("button");
+      sq.type = "button";
+      sq.className = "sq b" + c.cls + (i === session.idx ? " cur" : "") +
+        (it.picked !== null ? (it.picked === it.correct ? " ok" : " ko") : "");
+      sq.textContent = i + 1;
+      sq.addEventListener("click", function(){ session.idx = i; showQuestion(); });
+      grid.appendChild(sq);
+    });
   }
 
   function showQuestion(){
     var it = session.items[session.idx];
-    el("qCounter").textContent = "Question " + (session.idx + 1) + " / " + session.items.length;
-    el("qCatSwatch").style.background = catColor[it.cat];
-    el("qCatName").textContent = catLabel[it.cat];
-    el("qBar").style.width = (100 * (session.idx) / session.items.length) + "%";
+    var c = catByKey[it.cat];
+    el("qCounter").textContent = "Q " + (session.idx+1) + " / " + session.items.length;
+    el("qDot").className = "dot d" + c.cls;
+    el("qCatName").textContent = c.label;
+    el("qBar").style.width = (100*session.idx/session.items.length) + "%";
     el("qText").textContent = it.qtext;
-    el("qFeedback").hidden = true;
-    el("nextBtn").disabled = true;
-    el("nextBtn").textContent = (session.idx === session.items.length - 1) ? "Terminer →" : "Suivant →";
+    el("qFb").hidden = true;
+    el("prevBtn").disabled = session.idx === 0;
+    el("nextBtn").disabled = it.picked === null;
+    el("nextBtn").textContent = (session.idx === session.items.length-1) ? "Terminer →" : "Suivant →";
 
-    var optsWrap = el("qOpts");
-    optsWrap.innerHTML = "";
+    var wrap = el("qOpts");
+    wrap.innerHTML = "";
     it.options.forEach(function(optText, i){
       var btn = document.createElement("button");
       btn.className = "opt";
-      btn.innerHTML = '<span class="letter">' + String.fromCharCode(65 + i) + '</span><span>' + optText + '</span>';
-      btn.addEventListener("click", function(){ answer(i); });
-      optsWrap.appendChild(btn);
+      btn.innerHTML = '<span class="ltr">' + String.fromCharCode(65+i) + '</span><span>' + optText + (it.picked !== null && i === it.correct ? '<span class="tag">Bonne réponse</span>' : (it.picked === i && i !== it.correct ? '<span class="tag">Ta réponse</span>' : '')) + '</span>';
+      if (it.picked !== null){
+        btn.disabled = true;
+        if (i === it.correct) btn.classList.add("good");
+        else if (i === it.picked) btn.classList.add("wrong");
+      }
+      btn.addEventListener("click", function(){ if (it.picked === null) answer(i); });
+      wrap.appendChild(btn);
     });
+
+    if (it.picked !== null){
+      el("qFb").hidden = false;
+      var v = el("qVerdict");
+      if (it.picked === it.correct){ v.className = "verdict ok"; v.textContent = "✓ Bonne réponse"; }
+      else { v.className = "verdict ko"; v.textContent = "✗ Mauvaise réponse — la bonne était " + String.fromCharCode(65+it.correct); }
+    }
+    renderNavGrid();
   }
 
   function answer(choiceIdx){
     var it = session.items[session.idx];
-    var buttons = el("qOpts").querySelectorAll(".opt");
-    buttons.forEach(function(b, i){
-      b.disabled = true;
-      if (i === it.correct) b.classList.add("correct");
-      else if (i === choiceIdx) b.classList.add("wrong");
-    });
-    var fb = el("qFeedback");
-    fb.hidden = false;
+    it.picked = choiceIdx;
     var isCorrect = choiceIdx === it.correct;
-    if (isCorrect){
-      session.correct++;
-      fb.className = "feedback good";
-      fb.textContent = "✓ Bonne réponse";
-    } else {
-      session.missed.push(it);
-      fb.className = "feedback bad";
-      fb.textContent = "✗ Bonne réponse : " + String.fromCharCode(65 + it.correct);
-    }
-    if (!mastery[it.cat]) mastery[it.cat] = { correct: 0, total: 0 };
+    if (!mastery[it.cat]) mastery[it.cat] = { correct:0, total:0 };
     mastery[it.cat].total++;
     if (isCorrect) mastery[it.cat].correct++;
     saveMastery(mastery);
-    el("nextBtn").disabled = false;
+    showQuestion();
   }
 
-  function nextQuestion(){
-    if (session.idx < session.items.length - 1){ session.idx++; showQuestion(); }
+  el("prevBtn").addEventListener("click", function(){
+    if (session.idx > 0){ session.idx--; showQuestion(); }
+  });
+  el("nextBtn").addEventListener("click", function(){
+    if (session.idx < session.items.length-1){ session.idx++; showQuestion(); }
     else finishRun();
-  }
+  });
+  el("quitBtn").addEventListener("click", function(){
+    var answered = session.items.some(function(it){ return it.picked !== null; });
+    if (answered) finishRun(); else backToHome();
+  });
 
   function finishRun(){
     el("quiz").hidden = true;
     el("results").hidden = false;
     var total = session.items.length;
-    var pct = total ? Math.round(100 * session.correct / total) : 0;
+    var answeredItems = session.items.filter(function(it){ return it.picked !== null; });
+    var correctCount = answeredItems.filter(function(it){ return it.picked === it.correct; }).length;
+    var pct = answeredItems.length ? Math.round(100*correctCount/answeredItems.length) : 0;
     el("scoreBig").textContent = pct + "%";
-    el("scoreSub").textContent = session.correct + " bonnes réponses sur " + total;
+    el("scoreSub").textContent = correctCount + " bonnes réponses sur " + answeredItems.length + " répondues (" + total + " dans la session)";
 
     var byCat = {};
-    session.items.forEach(function(it){
-      if (!byCat[it.cat]) byCat[it.cat] = { correct: 0, total: 0 };
+    answeredItems.forEach(function(it){
+      if (!byCat[it.cat]) byCat[it.cat] = {correct:0,total:0};
       byCat[it.cat].total++;
-      if (session.missed.indexOf(it) === -1) byCat[it.cat].correct++;
+      if (it.picked === it.correct) byCat[it.cat].correct++;
     });
-
-    var bd = el("breakdown");
-    bd.innerHTML = "";
+    var bars = el("bars");
+    bars.innerHTML = "";
     CATS.forEach(function(c){
       var d = byCat[c.key];
       if (!d) return;
-      var p = Math.round(100 * (d.correct || 0) / d.total);
+      var p = Math.round(100*d.correct/d.total);
       var row = document.createElement("div");
-      row.className = "bd-row";
+      row.className = "bar";
       row.innerHTML =
-        '<div class="lab"><span class="swatch" style="background:' + c.color + '"></span>' + c.label + '</div>' +
-        '<div class="bd-bar"><i style="width:' + p + '%;background:' + c.color + '"></i></div>' +
-        '<div class="pct">' + p + '%</div>';
-      bd.appendChild(row);
+        '<span><span class="dot d' + c.cls + '" style="margin-right:7px"></span>' + c.label + '</span>' +
+        '<span class="tr"><i style="width:' + p + '%;background:var(--d' + c.cls + ')"></i></span>' +
+        '<span class="mono">' + p + '%</span>';
+      bars.appendChild(row);
     });
 
-    if (session.missed.length){
+    var missed = answeredItems.filter(function(it){ return it.picked !== it.correct; });
+    if (missed.length){
       el("missedWrap").hidden = false;
-      el("missedSummary").textContent = "Revoir les questions manquées (" + session.missed.length + ")";
       var list = el("missedList");
       list.innerHTML = "";
-      session.missed.forEach(function(it){
-        var div = document.createElement("div");
-        div.className = "missed-item";
-        div.innerHTML =
-          '<div class="mq">' + it.qtext + '</div>' +
-          '<div class="ma">Bonne réponse : <b>' + String.fromCharCode(65 + it.correct) + '. ' + it.options[it.correct] + '</b></div>';
-        list.appendChild(div);
+      missed.forEach(function(it){
+        var d = document.createElement("details");
+        d.className = "it";
+        d.innerHTML = '<summary><span class="n">#' + it.id + '</span><span>' + it.qtext + '</span></summary>' +
+          '<div class="body"><div class="lopt good"><b>' + String.fromCharCode(65+it.correct) + '</b><span>' + it.options[it.correct] + '</span></div></div>';
+        list.appendChild(d);
       });
     } else {
       el("missedWrap").hidden = true;
     }
-
-    renderStats();
-    refreshHomeData();
+    buildDoms();
   }
 
   function retryMissed(){
-    if (!session || !session.missed.length) return;
-    var items = session.missed.map(function(it){
-      return prepItem({ id: it.id, q: it.qtext, o: it.options, a: it.correct, c: it.cat });
-    });
-    runSession(items);
+    if (!session) return;
+    var missed = session.items.filter(function(it){ return it.picked !== it.correct; });
+    if (!missed.length) return;
+    runSession(missed.map(function(it){ return prepItem({id:it.id,q:it.qtext,o:it.options,a:it.correct,c:it.cat}); }));
   }
+  el("retryMissedBtn").addEventListener("click", retryMissed);
+  el("restartBtn").addEventListener("click", backToHome);
 
   function backToHome(){
     el("results").hidden = true;
     el("quiz").hidden = true;
     el("home").hidden = false;
-    refreshHomeData();
+    buildDoms();
+    buildCatChips();
+    updatePoolStats();
     window.scrollTo(0,0);
   }
 
-  function refreshHomeData(){
-    renderStats();
-    buildCatChips();
-    buildThemeTiles();
-    updatePoolHint();
-  }
+  el("startBtn").addEventListener("click", startRun);
+  el("shuffleOpts").addEventListener("change", function(e){ shuffleOpts = e.target.checked; });
 
   // ---- Sommaire des questions ----
   function buildIndexFilters(){
     var wrap = el("indexFilters");
     wrap.innerHTML = "";
     var all = document.createElement("button");
-    all.className = "chip-filter active";
+    all.className = "fchip";
+    all.setAttribute("aria-pressed","true");
     all.textContent = "Tous (" + ALL.length + ")";
     all.addEventListener("click", function(){ indexFilter = "all"; refreshIndexFilterUI(); renderIndex(); });
     wrap.appendChild(all);
     CATS.forEach(function(c){
       var n = ALL.filter(function(q){ return q.c === c.key; }).length;
       var b = document.createElement("button");
-      b.className = "chip-filter";
-      b.textContent = c.label + " (" + n + ")";
+      b.className = "fchip";
+      b.setAttribute("aria-pressed","false");
       b.setAttribute("data-cat", c.key);
+      b.textContent = c.label + " (" + n + ")";
       b.addEventListener("click", function(){ indexFilter = c.key; refreshIndexFilterUI(); renderIndex(); });
       wrap.appendChild(b);
     });
   }
   function refreshIndexFilterUI(){
-    el("indexFilters").querySelectorAll(".chip-filter").forEach(function(b){
+    el("indexFilters").querySelectorAll(".fchip").forEach(function(b){
       var isAll = !b.hasAttribute("data-cat");
-      var match = isAll ? indexFilter === "all" : b.getAttribute("data-cat") === indexFilter;
-      b.classList.toggle("active", match);
+      var match = isAll ? indexFilter==="all" : b.getAttribute("data-cat")===indexFilter;
+      b.setAttribute("aria-pressed", match ? "true" : "false");
     });
   }
   function renderIndex(){
@@ -714,49 +632,37 @@ details[open] > summary::before{content:"▾ "}
     });
     list.innerHTML = "";
     if (!items.length){
-      list.innerHTML = '<div class="index-empty">Aucune question ne correspond.</div>';
+      list.innerHTML = '<p class="muted" style="padding:16px 0">Aucune question ne correspond.</p>';
     } else {
-      items.slice(0, 400).forEach(function(it){
-        var row = document.createElement("div");
-        row.className = "index-row";
-        row.style.borderLeftColor = catColor[it.c];
-        row.innerHTML = '<span class="num mono">#' + it.id + '</span><span class="qt">' + it.q + '</span>';
-        list.appendChild(row);
+      items.slice(0,400).forEach(function(it){
+        var d = document.createElement("details");
+        d.className = "it";
+        var optsHtml = it.o.map(function(opt,i){
+          var good = i === it.a ? " good" : "";
+          return '<div class="lopt' + good + '"><b>' + String.fromCharCode(65+i) + '</b><span>' + opt + '</span></div>';
+        }).join("");
+        d.innerHTML = '<summary><span class="n">#' + it.id + '</span><span>' + it.q + '</span></summary><div class="body">' + optsHtml + '</div>';
+        list.appendChild(d);
       });
     }
-    el("indexCount").textContent = items.length + " question" + (items.length === 1 ? "" : "s") + " affichée" + (items.length === 1 ? "" : "s") + ".";
+    el("indexCount").textContent = items.length + " question" + (items.length===1?"":"s") + " affichée" + (items.length===1?"":"s") + ".";
   }
-
-  function buildDocs(){
-    var wrap = el("docsGrid");
-    wrap.innerHTML = DOCS.map(function(d){ return '<div class="doc">' + d + '</div>'; }).join("");
-  }
-
-  el("heroStartBtn").addEventListener("click", function(){
-    el("setup-session").scrollIntoView({behavior:"smooth", block:"start"});
-  });
-  el("startBtn").addEventListener("click", startRun);
-  el("nextBtn").addEventListener("click", nextQuestion);
-  el("quitBtn").addEventListener("click", function(){
-    if (session && session.idx > 0) finishRun();
-    else backToHome();
-  });
-  el("retryMissedBtn").addEventListener("click", retryMissed);
-  el("restartBtn").addEventListener("click", backToHome);
-  el("shuffleOpts").addEventListener("change", function(e){ shuffleOpts = e.target.checked; });
   el("indexSearch").addEventListener("input", function(e){ indexQuery = e.target.value; renderIndex(); });
 
-  buildDocs();
+  function buildDocs(){
+    el("docsList").innerHTML = DOCS.map(function(d){ return '<li><span>' + d + '</span></li>'; }).join("");
+  }
 
   function initWithData(json){
     ALL = json;
-    renderStats();
+    renderBlueprint();
     buildCatChips();
-    buildCountSeg();
-    buildThemeTiles();
+    buildDoms();
     buildIndexFilters();
     renderIndex();
-    updatePoolHint();
+    buildDocs();
+    updatePoolStats();
+    el("leadText").textContent = ALL.length + " questions d'entraînement, classées selon les cinq domaines de l'examen FASS. Les questions et réponses restent en anglais, comme à l'examen ; seule l'interface est en français.";
   }
 
   window.__fassInit = initWithData;
